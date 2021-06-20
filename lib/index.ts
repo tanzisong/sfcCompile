@@ -1,101 +1,32 @@
 /// <reference types="@types/css" />
 
 import {baseParse, TemplateChildNode, TemplateNode} from '@vue/compiler-core';
-import { parse as TsParser } from '@babel/parser';
-import { transform } from '@babel/standalone';
-import cssParser from 'css/lib/parse';
+import {parseStyle} from './parse/parseStyle';
+import {scriptParse} from './parse/parseScript';
+import {
+	File,
+	Statement,
+	ExportDefaultDeclaration,
+	ObjectExpression,
+	Identifier,
+	ObjectProperty,
+	StringLiteral
+} from '@babel/types';
 import {template} from './test';
-import {Declaration, Rule, Stylesheet} from "css";
 
 enum CompileTarget {
-	Page,
-	Component
-}
-
-function templateCompile(template: string) {
-	let styleMap: Map<string, Record<string, string>>;
-
-	const {children} = baseParse(template, {});
-
-	const [layoutTemplate, scriptTemplate, styleTemplate] = getTemplate(children);
-
-	console.info('layoutTemplate', layoutTemplate);
-
-	if (scriptTemplate) {
-		scriptParse(scriptTemplate)
-	}
-
-	if (styleTemplate) {
-		// styleMap = parseStyle(styleTemplate);
-	}
-
-
+	page,
+	component
 }
 
 /**
- * parse css
+ * if condition === false break the program
  * */
-function parseStyle(style: string) {
-	const styleMap = new Map<string, Record<string, string>>();
-	const parseStyle: Stylesheet = cssParser(style);
-	console.info(style, parseStyle);
-	const {stylesheet} = parseStyle;
-
-	stylesheet?.rules.forEach((classBlock) => {
-		const {type, declarations, selectors} = classBlock as Rule;
-		if (type === "rule") {
-			const style = declarations?.reduce((p: Declaration, c: Declaration) => {
-				if(c.type === "declaration") {
-					return {
-						...p,
-						[toHumpName(c.property!)]: c.value
-					}
-				}
-				return p;
-			}, {}) || {};
-
-			selectors?.forEach(select => {
-				if (select.indexOf('.') === 0) {
-					// class选择器
-					const className = select.slice(1);
-
-					styleMap.set(className, {
-						...(styleMap.get(className) || {}),
-						...(style || {}) as Record<string, string>
-					})
-				}
-			})
-		}
-	})
-
-	return styleMap;
+function assert(condition: boolean, msg: string) {
+	if (!condition) {
+		throw new Error(msg)
+	}
 }
-
-function toHumpName(name: string): string {
-	if (!name) return name;
-
-	return name.replace(/-(\w)/g, (_, $1) => $1.toUpperCase());
-}
-
-
-const defaultOptions = {
-	sourceType: "module",
-	allowImportExportEverywhere: false,
-	allowReturnOutsideFunction: false,
-	createParenthesizedExpressions: false,
-	ranges: false,
-	tokens: false,
-	errorRecovery: false
-};
-
-function scriptParse(script: string) {
-	const AST = TsParser(script, defaultOptions as any);
-	// const a = transformFromAst(AST, '', {})
-	console.info('AST\n\n', AST);
-	// console.info('a\n\n', a);
-	console.info(transform('const a = 1;', { presets: ['es2015'] }));
-}
-
 
 type ToParseTemplateArr = [TemplateNode | null, string | null, string | null];
 type GetTemplate = (children: TemplateChildNode[]) => ToParseTemplateArr;
@@ -120,6 +51,46 @@ const getTemplate: GetTemplate = (children) => {
 	});
 
 	return templateArr;
+}
+
+function getParseTarget(originalParsedScript: File): CompileTarget {
+	const statement = originalParsedScript.program.body[0];
+	assert(statement.type === 'ExportDefaultDeclaration', 'There is no correct export in script');
+
+	const declaration = (statement as ExportDefaultDeclaration).declaration;
+	assert(declaration.type === 'ObjectExpression', 'the export is not an object');
+
+	const properties = (declaration as ObjectExpression).properties;
+	const propertiesItem = properties.find((_) => ('key' in _) && ('name' in _.key) && _.key.name === 'name');
+	assert(!!propertiesItem, 'The attribute name is undefined');
+
+	const value = (propertiesItem as ObjectProperty).value;
+	const name = (value as StringLiteral).value;
+	assert((!!name && (name === CompileTarget[CompileTarget["component"]] || name === CompileTarget[CompileTarget["page"]])), 'the name is not component or page String');
+
+	return name as unknown as CompileTarget;
+}
+
+function templateCompile(template: string) {
+	let styleMap: Map<string, Record<string, string>>;
+	let originalParsedScript: File;
+	let target: CompileTarget;
+
+	const {children} = baseParse(template, {});
+
+	const [layoutTemplate, scriptTemplate, styleTemplate] = getTemplate(children);
+
+	console.info('layoutTemplate', layoutTemplate);
+
+	if (scriptTemplate) {
+		originalParsedScript = scriptParse(scriptTemplate)
+		target = getParseTarget(originalParsedScript)
+		console.info('target', target);
+	}
+
+	if (styleTemplate) {
+		// styleMap = parseStyle(styleTemplate);
+	}
 }
 
 
