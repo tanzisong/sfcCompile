@@ -14,7 +14,6 @@ const defaultOptions = {
 
 function scriptParse(script: string) {
 	const AST = TsParser(script, defaultOptions as any);
-	console.info('AST\n\n', AST);
 	// console.info(transform(`function a(params = 1, params2 = 2) {
 	// 	const a = [1, 2, 3];
 	// 	const b = params + params2;

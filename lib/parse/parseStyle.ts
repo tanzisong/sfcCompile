@@ -1,5 +1,6 @@
 import {Declaration, Rule, Stylesheet} from "css";
 import cssParser from "css/lib/parse";
+import {toHumpName} from "../utils";
 
 /**
  * parse css
@@ -7,7 +8,6 @@ import cssParser from "css/lib/parse";
 function parseStyle(style: string) {
 	const styleMap = new Map<string, Record<string, string>>();
 	const parseStyle: Stylesheet = cssParser(style);
-	console.info(style, parseStyle);
 	const {stylesheet} = parseStyle;
 
 	stylesheet?.rules.forEach((classBlock) => {
@@ -38,12 +38,6 @@ function parseStyle(style: string) {
 	})
 
 	return styleMap;
-}
-
-function toHumpName(name: string): string {
-	if (!name) return name;
-
-	return name.replace(/-(\w)/g, (_, $1) => $1.toUpperCase());
 }
 
 export { parseStyle }
