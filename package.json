@@ -7,7 +7,7 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production rollup -c rollup.config.js",
     "build:webpack": "rm -rf ./dist && cross-env NODE_ENV=production webpack",
-    "dev": "cross-env NODE_ENV=production webpack --watch"
+    "dev": "cross-env NODE_ENV=production webpack --watch --progress"
   },
   "author": "",
   "license": "ISC",

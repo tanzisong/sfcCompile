@@ -86,13 +86,13 @@ function getRootData(originalParsedScript: File): Record<string, any> | void {
  * */
 function getRootMethods(originalParsedScript: File, scriptTemplate: string): Record<string, any> | void {
   const a = transform(
-    `function a(params = 1, params2 = 2) {
+    `function a(params = 1, params2 = 2, params3 = 'sss') {
     const a = [1, 2, 3];
     let c = 11;
     const b = params + params2;
-    return [...a, b];
+    return [...a, b]
   }`,
-    { presets: ['env'] },
+    { presets: ["es2015-no-commonjs"] },
   );
 
   console.info('a', a);

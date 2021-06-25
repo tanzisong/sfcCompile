@@ -1,6 +1,6 @@
 const path = require('path');
 const cpus = require('os').cpus();
-const webpackbar = require('webpackbar');
+const webpackBar = require('webpackbar');
 const smp = require('speed-measure-webpack-plugin');
 
 const fileName = 'compile';
@@ -9,16 +9,16 @@ module.exports = {
   mode: 'production',
   target: 'web',
   entry: './lib/index.ts',
-  devtool: "none",
+  devtool: false,
   output: {
     path: path.resolve(__dirname, '.', 'dist/lib/'),
     filename: `${fileName}.umd.js`,
   },
-  plugins: [new webpackbar({}), new smp()],
+  plugins: [new webpackBar({}), new smp()],
   module: {
     rules: [
       {
-        test: /\.(ts)$/,
+        test: /\.ts/,
         exclude: /(node_modules|bower_components)/,
         use: [
           {
