@@ -1,36 +1,48 @@
 const path = require('path');
+const cpus = require('os').cpus();
+const webpackbar = require('webpackbar');
+const smp = require('speed-measure-webpack-plugin');
 
 const fileName = 'compile';
 
 module.exports = {
-	mode: 'production',
-	target: 'web',
-	entry: './lib/index.ts',
-	output: {
-		path: path.resolve(__dirname, '.', 'dist/lib/'),
-		filename: `${fileName}.umd.js`,
-	},
-	module: {
-		rules: [
-			{
-				test: /\.(ts)$/,
-				include: [
-					path.join(__dirname, 'node_modules', '@vue/compiler-core'),
-					path.join(__dirname, 'lib'),
-				],
-				use: [
-					{
-						loader: 'babel-loader'
-					},
-					{
-						loader: 'ts-loader'
-					}
-				],
-				exclude: /node_modules/,
-			}
-		],
-	},
-	resolve: {
-		extensions: ['.tsx', '.ts', '.js', 'json'],
-	},
+  mode: 'production',
+  target: 'web',
+  entry: './lib/index.ts',
+  devtool: "none",
+  output: {
+    path: path.resolve(__dirname, '.', 'dist/lib/'),
+    filename: `${fileName}.umd.js`,
+  },
+  plugins: [new webpackbar({}), new smp()],
+  module: {
+    rules: [
+      {
+        test: /\.(ts)$/,
+        exclude: /(node_modules|bower_components)/,
+        use: [
+          {
+            loader: 'thread-loader',
+            options: {
+              workers: cpus - 1,
+            },
+          },
+          {
+            loader: 'babel-loader',
+            options: { cacheDirectory: true },
+          },
+          // {
+          //   loader: 'ts-loader',
+          //   options: {
+          //     transpileOnly: true,
+          //     happyPackMode: true,
+          //   },
+          // },
+        ],
+      },
+    ],
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js', 'json'],
+  },
 };

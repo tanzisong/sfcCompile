@@ -1,1 +1,1 @@
-declare module "css/lib/parse";
+declare module 'css/lib/parse';

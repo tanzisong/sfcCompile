@@ -1,6 +1,7 @@
 <template>
 	<view class="button" :style="getButtonBg()">
 		<text class="button_text">{{ button_text }}</text>
+		<text class="button_text">{{ getText() }}</text>
 	</view>
 </template>
 
@@ -19,7 +20,11 @@ export default {
 	methods: {
 		getButtonBg() {
 			return this.props.button_background_color || this.data.defaultBg;
-		}
+		},
+		getText() {
+			return 'sssss'
+		},
+    handleClick: () => {}
 	}
 }
 </script>
