@@ -12,7 +12,7 @@ import {
   ObjectMethod,
   ReturnStatement,
 } from '@babel/types';
-import { assert, CompileTarget } from './index';
+import { assert, CompileTarget } from './tools';
 
 type ObjectValue = ArrayExpression | StringLiteral | NumericLiteral | NullLiteral | BooleanLiteral | ObjectExpression;
 enum RootPropName {
@@ -40,7 +40,7 @@ function getParseTarget(originalParsedScript: File): CompileTarget {
 
   const value = (propertiesItem as ObjectProperty).value;
   const name = (value as StringLiteral).value;
-  assert(!!name && (name === CompileTarget['component'] || name === CompileTarget['page']), 'the name is not component or page String');
+  assert(!!name && (name === CompileTarget['component'] || name === CompileTarget['page']), 'the name is not component or page String;');
 
   return (name as unknown) as CompileTarget;
 }
@@ -87,15 +87,15 @@ function getRootData(originalParsedScript: File): Record<string, any> | void {
 function getRootMethods(originalParsedScript: File, scriptTemplate: string): Record<string, any> | void {
   const a = transform(
     `function a(params = 1, params2 = 2, params3 = 'sss') {
-    const a = [1, 2, 3];
+    const a1 = [1, 2, 3];
     let c = 11;
     const b = params + params2;
-    return [...a, b]
+    return [...a1, b, c]
   }`,
     { presets: ["es2015-no-commonjs"] },
   );
 
-  console.info('a', a);
+  console.info('aas1s', a);
 
   const propertiesItemMethods = getRootPropertiesItem(originalParsedScript, RootPropName.methods);
   if (!propertiesItemMethods) {

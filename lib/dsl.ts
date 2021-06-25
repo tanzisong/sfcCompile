@@ -188,7 +188,7 @@ export interface Component {
   /**
    * 组件样式，定义组件样式值
    */
-  style?: DataType.UniObject | React.CSSProperties;
+  style?: DataType.UniObject;
 
   /**
    * 组件事件，定义组件事件的处理方法

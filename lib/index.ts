@@ -6,7 +6,7 @@ import { scriptParse } from './parse/parseScript';
 import { File } from '@babel/types';
 import { template } from './test';
 import { Application, ComponentDefinition, DataType } from './dsl';
-import { assert, CompileTarget, isEmptyObject, shallowMerge, toHumpName, warn } from './utils';
+import { assert, CompileTarget, isEmptyObject, shallowMerge, toHumpName, warn } from './utils/tools';
 import { getRootProps, getParseTarget, getRootData, getRootMethods } from './utils/get';
 
 // todo style补充一下React.cssXXX

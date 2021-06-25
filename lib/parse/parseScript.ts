@@ -1,5 +1,4 @@
 import { parse as TsParser } from '@babel/parser';
-// import { transform, transformFromAst } from '@babel/standalone';
 
 const defaultOptions = {
   sourceType: 'module',

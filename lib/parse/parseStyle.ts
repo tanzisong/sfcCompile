@@ -1,6 +1,6 @@
 import { Declaration, Rule, Stylesheet } from 'css';
 import cssParser from 'css/lib/parse';
-import { toHumpName } from '../utils';
+import { toHumpName } from '../utils/tools';
 
 /**
  * parse css
