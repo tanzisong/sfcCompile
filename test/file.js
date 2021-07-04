@@ -1,50 +1,57 @@
+const { Parser } = require('../dist/lib/compile.umd.js');
+const template = `
 <template>
-	<view class="button" :style="getButtonBg()">
-		<text class="button_text">{{ button_text }}</text>
-		<text class="button_text">{{ getText() }}</text>
-	</view>
+ <view class="button button_1" :style="getButtonBg()">
+    <slot name='button'>
+      <view class='button'></view>
+    </slot>
+  <text class="button_text">{{ "button_text" }}</text>
+  <text class="button_text">{{ 'button_text' }}</text>
+  <text class="button_text">{{ getText() }}</text>
+  <text class="button_text">{{ text }}</text>
+ </view>
 </template>
 
 <script>
 export default {
-  name: "component",
-  props: {
-    button_background_color: '',
-    button_text: null,
-    number: 1,
-    boolean: true,
-    string: [
-      null,
-      {
-        number: 1
-      },
-      ['1', true],
-      false
-    ],
-    array: [1, 2, 3, 4],
-    testObj: {
-      a: {
-        b: 1
-      },
-      d: ['string']
-    }
-  },
-  data() {
-    return {
-      defaultBg: '#008DEA',
-      text: "text"
-    }
-  },
-  methods: {
-    getButtonBg(bg = '#fff') {
-      const color = this.props.button_background_color || this.data.defaultBg || bg;
-      return color;
+ name: "component",
+ props: {
+  button_background_color: '',
+  button_text: null,
+  number: 1,
+  boolean: true,
+  string: [
+    null,
+    {
+      number: 1
     },
-    getText: () => {
-      return 'sssss'
-    },
+    ['1', true],
+    false
+  ],
+  array: [1, 2, 3, 4],
+  testObj: {
+  	a: {
+  		b: 1
+  	},
+  	d: ['string']
+  }
+ },
+ data() {
+  return {
+   defaultBg: '#008DEA',
+   text: "text"
+  }
+ },
+ methods: {
+  getButtonBg(bg = '#fff') {
+    const color = this.props.button_background_color || this.data.defaultBg || bg;
+    return color;
   },
-  mounted() {
+  getText: () => {
+    return 'sssss'
+  },
+ },
+   mounted() {
     if(this.props.appInfo.device_platform === 'android') {
       this.methods.setData({
         is_iphone: false
@@ -62,7 +69,7 @@ export default {
     }
   },
   event: {
-    app_ad_event(data) {
+   app_ad_event(data) {
       console.info('安卓下载数据', data);
       if(data.data) {
         var { current_bytes = 0, total_bytes = 0, status } = data.data;
@@ -80,21 +87,18 @@ export default {
           case this.data.DOWNLOAD_STATUS.FAIL:
           case this.data.DOWNLOAD_STATUS.IDLE:
           case this.data.DOWNLOAD_STATUS.UNSUBSCRIBED:
-            // 取消/未下载/失败
             newButtonData.isDownloading = false;
             newButtonData.text = this.data.statusText.idleText;
             newButtonData.icon = this.data.statusIcon['0'];
             newButtonData.status = this.data.DownloadStatus.fail;
             break;
           case this.data.DOWNLOAD_STATUS.DOWNLOADING:
-            // 下载中
             newButtonData.isDownloading = true;
             newButtonData.isPaused = false;
             newButtonData.process = progress;
             newButtonData.status = this.data.DownloadStatus.ing;
             break;
           case this.data.DOWNLOAD_STATUS.PAUSED:
-            // 暂停
             newButtonData.isDownloading = true;
             newButtonData.isPaused = true;
             newButtonData.process = progress;
@@ -103,7 +107,6 @@ export default {
             newButtonData.status = this.data.DownloadStatus.paused;
             break;
           case this.data.DOWNLOAD_STATUS.FINISHED:
-            // 下载完成
             newButtonData.isDownloading = false;
             newButtonData.text = this.data.statusText.finishedText;
             newButtonData.icon = this.data.statusIcon['4'];
@@ -111,7 +114,6 @@ export default {
             newButtonData.process = progress;
             break;
           case this.data.DOWNLOAD_STATUS.INSTALLED:
-            // 安装完成
             newButtonData.isDownloading = false;
             newButtonData.text = this.data.statusText.installedText;
             newButtonData.icon = this.data.statusIcon['4'];
@@ -130,19 +132,22 @@ export default {
 </script>
 
 <style>
-	.button {
-		width: 100%;
-		height: 100%;
-		border-radius: 4px;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.button_text {
-		font-weight: 500;
-		font-style: normal;
-		line-height: 20px;
-		font-size: 16px;
-		color: rgba(255, 255, 255, 0.9);
-	}
+ .button {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  align-items: center;
+  justify-content: center;
+ }
+ 
+ .button_text {
+  font-weight: 500;
+  font-style: normal;
+  line-height: 20px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+ }
 </style>
+`;
+
+console.info(new Parser(template).ParsedDSL);

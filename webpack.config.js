@@ -2,31 +2,33 @@ const path = require('path');
 const cpus = require('os').cpus();
 // const webpackBar = require('webpackbar');
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require('terser-webpack-plugin');
 
 const fileName = 'compile';
 
 const smp = new SpeedMeasurePlugin();
 const smpWrapperConfig = smp.wrap({
   mode: 'production',
-  target: 'web',
+  target: 'node',
   entry: './lib/index.ts',
   output: {
     path: path.resolve(__dirname, '.', 'dist/lib/'),
     filename: `${fileName}.umd.js`,
+    libraryTarget: 'umd',
+    umdNamedDefine: true,
   },
   // new webpackBar({})
   optimization: {
-    minimize: false,
-    // minimizer: [
-    //   new TerserPlugin({
-    //     parallel: false,
-    //     exclude: /node_modules/,
-    //     terserOptions: {
-    //       sourceMap: false,
-    //     },
-    //   })
-    // ]
+    // minimize: false,
+    minimizer: [
+      new TerserPlugin({
+        parallel: false,
+        exclude: /node_modules/,
+        terserOptions: {
+          sourceMap: false,
+        },
+      }),
+    ],
   },
   plugins: [],
   module: {

@@ -1,4 +1,10 @@
 import { parse as TsParser } from '@babel/parser';
+import { File } from '@babel/types';
+import { transform } from '@babel/standalone';
+
+interface PolyfillCode {
+  code: string;
+}
 
 const defaultOptions = {
   sourceType: 'module',
@@ -10,18 +16,12 @@ const defaultOptions = {
   errorRecovery: false,
 };
 
-function scriptParse(script: string) {
-  const AST = TsParser(script, defaultOptions as any);
-  // const A = transformFromAst(AST, '', {}, () => {
-  //   console.info('adsdas')
-  // });
-  // console.info('AAA', A);
-  // console.info(transform(`function a(params = 1, params2 = 2) {
-  // 	const a = [1, 2, 3];
-  // 	const b = params + params2;
-  // 	return [...a, b];
-  // }`, { presets: ['es2015'] }));
-  return AST;
+function scriptParse(script: string): File {
+  return TsParser(script, defaultOptions as any) as File;
 }
 
-export { scriptParse };
+function polyfill(code: string): PolyfillCode {
+  return transform(code, { presets: ['es2015-no-commonjs'] });
+}
+
+export { scriptParse, polyfill };

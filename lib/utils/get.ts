@@ -1,4 +1,3 @@
-import { transform } from '@babel/standalone';
 import {
   ExportDefaultDeclaration,
   File,
@@ -13,6 +12,8 @@ import {
   ReturnStatement,
 } from '@babel/types';
 import { assert, CompileTarget } from './tools';
+import { polyfill } from '../parse/parseScript';
+import { DataType } from '../dsl';
 
 type ObjectValue = ArrayExpression | StringLiteral | NumericLiteral | NullLiteral | BooleanLiteral | ObjectExpression;
 enum RootPropName {
@@ -22,6 +23,9 @@ enum RootPropName {
   methods = 'methods',
   event = 'event',
   mounted = 'mounted',
+}
+interface Lifetimes {
+  [RootPropName.mounted]: string;
 }
 
 /**
@@ -49,7 +53,7 @@ function getParseTarget(originalParsedScript: File): CompileTarget {
  * 获取sfc中props部分
  * todo catch报错
  * */
-function getRootProps(originalParsedScript: File): Record<string, any> | void {
+function getRootProps(originalParsedScript: File): DataType.UniObject | undefined {
   const propertiesItemProps = getRootPropertiesItem(originalParsedScript, RootPropName.props);
   if (!propertiesItemProps) return;
 
@@ -64,7 +68,7 @@ function getRootProps(originalParsedScript: File): Record<string, any> | void {
  * 获取sfc中data部分
  * todo catch报错
  * */
-function getRootData(originalParsedScript: File): Record<string, any> | void {
+function getRootData(originalParsedScript: File): DataType.UniObject | undefined {
   const propertiesItemData = getRootPropertiesItem(originalParsedScript, RootPropName.data);
   if (!propertiesItemData) return;
 
@@ -84,43 +88,88 @@ function getRootData(originalParsedScript: File): Record<string, any> | void {
 /**
  * 获取sfc中methods部分
  * */
-function getRootMethods(originalParsedScript: File, scriptTemplate: string): Record<string, any> | void {
-  const a = transform(
-    `function a(params = 1, params2 = 2, params3 = 'sss') {
-    const a1 = [1, 2, 3];
-    let c = 11;
-    const b = params + params2;
-    return [...a1, b, c]
-  }`,
-    { presets: ["es2015-no-commonjs"] },
-  );
-
-  console.info('aas1s', a);
-
+function getRootMethods(originalParsedScript: File, scriptTemplate: string): DataType.UniObject | undefined {
   const propertiesItemMethods = getRootPropertiesItem(originalParsedScript, RootPropName.methods);
   if (!propertiesItemMethods) {
     return;
   }
 
-  console.info('propertiesItemMethods\n', propertiesItemMethods);
+  const methods: Record<string, string> = {};
   if ('value' in propertiesItemMethods) {
     if (propertiesItemMethods.value.type !== 'ObjectExpression') {
       assert(false, 'the methods is not an object');
       return;
     }
 
-    const methods: Record<string, string> = {};
-
     propertiesItemMethods.value.properties.forEach(method => {
       // todo ObjectProperty ArrowFunctionExpression
 
       if (method.type === 'ObjectMethod') {
+        const start = method.start;
+        const end = method.end;
+
         if ('name' in method.key) {
-          methods[method.key.name] = '';
+          const funStr = 'function ' + scriptTemplate.slice(start!, end!).trim();
+          methods[method.key.name] = polyfill(funStr).code;
         }
       }
     });
   }
+
+  return methods;
+}
+
+/**
+ * 获取sfc mounted等生命周期部分
+ * */
+function getRootLifetimes(originalParsedScript: File, scriptTemplate: string): Lifetimes | undefined {
+  const propertiesItemMounted = getRootPropertiesItem(originalParsedScript, RootPropName.mounted);
+  if (!propertiesItemMounted) {
+    return;
+  }
+
+  const start = propertiesItemMounted.start!;
+  const end = propertiesItemMounted.end!;
+
+  const funStr = 'function ' + scriptTemplate.slice(start, end).trim();
+
+  return {
+    mounted: polyfill(funStr).code,
+  };
+}
+
+/**
+ * 获取sfc event
+ * */
+function getRootEvent(originalParsedScript: File, scriptTemplate: string): DataType.UniObject | undefined {
+  const propertiesItemEvent = getRootPropertiesItem(originalParsedScript, RootPropName.event);
+  if (!propertiesItemEvent) {
+    return;
+  }
+
+  const events: Record<string, string> = {};
+  if ('value' in propertiesItemEvent) {
+    if (propertiesItemEvent.value.type !== 'ObjectExpression') {
+      assert(false, 'the event is not an object');
+      return;
+    }
+
+    propertiesItemEvent.value.properties.forEach(event => {
+      // todo ObjectProperty ArrowFunctionExpression
+
+      if (event.type === 'ObjectMethod') {
+        const start = event.start;
+        const end = event.end;
+
+        if ('name' in event.key) {
+          const funStr = 'function ' + scriptTemplate.slice(start!, end!).trim();
+          events[event.key.name] = polyfill(funStr).code;
+        }
+      }
+    });
+  }
+
+  return events;
 }
 
 function getRootPropertiesItem(originalParsedScript: File, name: RootPropName) {
@@ -185,4 +234,4 @@ function getPropertiesItemValue(value: Array<ObjectValue>) {
   return arr;
 }
 
-export { getParseTarget, getRootProps, getRootData, getRootMethods };
+export { getParseTarget, getRootProps, getRootData, getRootMethods, getRootLifetimes, getRootEvent };

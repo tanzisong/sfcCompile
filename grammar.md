@@ -30,18 +30,34 @@
     
     event/lifetimes-load
         1: 语法降级
-        
+    
+    slot
+        1: slot子集的含义
+            (1): component   <slot name="button"><xxx ...></xxx></slot>
+                    xxx节点则是button的默认子节点, 如果在使用该component的时候,没有传递元素, 则默认展示子节点
+            (2): page        <slot name="button"><xxx ...></xxx></slot>
+                    xxx节点表示在对应component占位符填充的元素
 ```
 
 
 ```text
-那些常用的语法会被降级
-    1: 
+可被降级的语法
+    1: 模板字符串
+    2: 箭头函数
+    3: class
+    4: {a,b}
+    5: 对象的key支持计算拼接算出
+    6: for of
+    7: es6 Unicode
+    8: ...
+    9: 函数默认参数
+    10: 等等
 ```
 
 
 ```text
 待支持语法
+1: 单行注释
 2: v-bind:class语法
 2: v-bind:style语法
 5: {{ `${variable}` }} 模板字符串语法

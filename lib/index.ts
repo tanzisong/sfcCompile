@@ -4,19 +4,11 @@ import { AttributeNode, baseParse, DirectiveNode, TemplateChildNode, TemplateNod
 import { parseStyle } from './parse/parseStyle';
 import { scriptParse } from './parse/parseScript';
 import { File } from '@babel/types';
-import { template } from './test';
-import { Application, ComponentDefinition, DataType } from './dsl';
-import { assert, CompileTarget, isEmptyObject, shallowMerge, toHumpName, warn } from './utils/tools';
-import { getRootProps, getParseTarget, getRootData, getRootMethods } from './utils/get';
+import { Application, Component, ComponentDefinition, DataType } from './dsl';
+import { assert, CompileTarget, isEmptyObject, removeKeyFromObj, shallowMerge, toHumpName, warn } from './utils/tools';
+import { getRootProps, getParseTarget, getRootData, getRootMethods, getRootLifetimes, getRootEvent } from './utils/get';
+import { GetTemplate, HandleProps, ToParseTemplateArr } from './types';
 
-// todo style补充一下React.cssXXX
-type HandleProps = {
-  props?: DataType.UniObject;
-  style?: DataType.UniObject;
-};
-
-type ToParseTemplateArr = [TemplateNode | null, string | null, string | null];
-type GetTemplate = (children: TemplateChildNode[]) => ToParseTemplateArr;
 const getTemplate: GetTemplate = children => {
   const templateArr: ToParseTemplateArr = [null, null, null];
 
@@ -46,6 +38,13 @@ class Parser {
   private originalParsedScript!: File;
   private target!: CompileTarget;
   private parsedDSL!: ComponentDefinition | Application;
+  private layoutTemplate!: TemplateNode;
+  private scriptTemplate!: string;
+  private componentDefaultProps: Record<DataType.UniString, Array<Component>> = {};
+
+  get ParsedDSL() {
+    return this.parsedDSL;
+  }
 
   constructor(template: string) {
     this.templateCompile(template);
@@ -58,20 +57,16 @@ class Parser {
     assert(!!scriptTemplate, 'No script module');
     assert(!!layoutTemplate, 'No template module');
 
-    console.info('layoutTemplate', layoutTemplate);
-
+    this.layoutTemplate = layoutTemplate!;
+    this.scriptTemplate = scriptTemplate!;
     this.originalParsedScript = scriptParse(scriptTemplate!);
     this.target = getParseTarget(this.originalParsedScript);
-
-    console.info('this.originalParsedScript\n', this.originalParsedScript);
 
     if (styleTemplate) {
       this.styleMap = parseStyle(styleTemplate);
     }
 
-    // const topProps = this.handleNodeProps(layoutTemplate?.props || []);
-
-    this.target === CompileTarget[CompileTarget.component] ? this.parseComponent(layoutTemplate!, scriptTemplate!) : this.parsePage();
+    this.target === CompileTarget[CompileTarget.component] ? this.parseComponent() : this.parsePage();
   }
 
   /**
@@ -82,29 +77,113 @@ class Parser {
   /**
    * 解析component
    * */
-  parseComponent(layoutTemplate: TemplateNode, scriptTemplate: string) {
-    // props => script中的props模块
-    // data => script中的data(){return{}}模块
-    // methods => script中的methods模块
+  parseComponent() {
+    const parsedDSL = {} as ComponentDefinition;
 
-    // event => todo
-    // lifetimes => script中的onload
-    // slots => 编译children的时候需要提取slots中的children,当做默认值
-    // content
+    parsedDSL.props = getRootProps(this.originalParsedScript); // 获取root props
+    parsedDSL.data = getRootData(this.originalParsedScript); // 获取root data
 
-    // getRootProps(this.originalParsedScript); // 获取root props
-    // getRootData(this.originalParsedScript) // 获取root data
-    getRootMethods(this.originalParsedScript, scriptTemplate); // 获取root methods
+    parsedDSL.methods = {};
+    const methods = getRootMethods(this.originalParsedScript, this.scriptTemplate); // 获取root methods
+    Object.entries(methods || {}).forEach(method => {
+      parsedDSL.methods![method[0]] = {
+        __TYPE__: 4,
+        code: method[1] as string,
+      };
+    });
 
-    // this.parsedDSL
-    // layoutTemplate
+    parsedDSL.event = {};
+    const events = getRootEvent(this.originalParsedScript, this.scriptTemplate); // 获取root event
+    Object.entries(events || {}).forEach(event => {
+      parsedDSL.event![event[0]] = {
+        __TYPE__: 4,
+        code: event[1] as string,
+      };
+    });
+
+    const rootLiftTimes = getRootLifetimes(this.originalParsedScript, this.scriptTemplate); // 获取root 生命周期
+    if (rootLiftTimes) {
+      parsedDSL.lifetimes = {};
+      if (rootLiftTimes.mounted) {
+        parsedDSL.lifetimes.load = {
+          __TYPE__: 4,
+          code: rootLiftTimes.mounted,
+        };
+      }
+    }
+
+    const rootNodeView = this.layoutTemplate.tag;
+    const rootNodeProps = this.handleNodeProps(this.layoutTemplate.props);
+    const rootNodeChildren = this.parseChildren(this.layoutTemplate.children);
+
+    parsedDSL.content = {
+      id: '',
+      name: rootNodeView,
+      slots: this.componentDefaultProps,
+      style: rootNodeProps.style,
+      props: rootNodeProps.props,
+      children: rootNodeChildren,
+    };
+
+    this.parsedDSL = parsedDSL;
   }
 
   /**
    * 遍历page和component内容部分
    * */
-  parseChildren(children: TemplateChildNode[]) {
-    // children
+  private parseChildren(children: TemplateChildNode[]): Component[] {
+    let parsedChildren: Component[] = [];
+
+    children.forEach(child => {
+      if (child.type === 1) {
+        // 节点
+        // PlainElementNode | ComponentNode | SlotOutletNode | TemplateNode
+
+        const nodeProps = this.handleNodeProps(child.props);
+        let nodeChildren: Component[] = [];
+
+        if (child.children && child.children.length) {
+          nodeChildren = this.parseChildren(child.children);
+        }
+
+        if (this.target === CompileTarget.component && child.tagType === 2) {
+          // component slot as default slot and ignore children
+
+          if (!nodeProps.name) {
+            assert(false, `component: slot name is not found`);
+            return;
+          }
+          this.componentDefaultProps[nodeProps.name] = nodeChildren;
+          // 这里的props 中的name要变成slotName
+          const handleNodeProps = {
+            ...removeKeyFromObj(nodeProps, ['name']),
+            slotName: nodeProps.name,
+          } as DataType.UniObject;
+
+          parsedChildren.push({
+            id: '',
+            name: child.tag,
+            style: nodeProps.style,
+            props: handleNodeProps,
+          });
+          return;
+        }
+
+        parsedChildren.push({
+          id: '',
+          name: child.tag,
+          style: nodeProps.style,
+          props: nodeProps.props,
+          children: nodeChildren,
+        });
+      }
+
+      // todo other node
+      // NodeTypes.INTERPOLATION // => {{}}语法
+      // child.type
+    });
+
+    return parsedChildren;
   }
 
   /**
@@ -157,25 +236,30 @@ class Parser {
               style,
             };
       }
-      // todo bind and other props
 
+      if (n.type === 7) {
+        // todo Dynamic bind props => 'bind', 'DirectiveNode' and so on
+        return p;
+      }
+
+      // other static props
       return {
         ...p,
+        [n.name]: n.value?.content,
       };
     }, {} as HandleProps & { classStyle: Record<any, any> });
 
-    let returnProps: HandleProps = {};
+    const otherProps = removeKeyFromObj(baseProps, ['style', 'classStyle']);
 
-    (baseProps.style || baseProps.classStyle) &&
-      (returnProps.style = {
+    return {
+      style: {
         ...(baseProps.classStyle || {}),
         ...(baseProps.style || {}),
-      });
-
-    baseProps.props && (returnProps.props = baseProps.props);
-
-    return returnProps;
+      },
+      props: baseProps.props || {},
+      ...otherProps,
+    };
   }
 }
 
-new Parser(template);
+export { Parser };

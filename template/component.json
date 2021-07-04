@@ -1,0 +1,487 @@
+{
+  "props": {
+    "devider_image": "linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 0.01%, rgba(255, 27, 27, 0.598214) 51.79%, rgba(255, 255, 255, 0) 100%)",
+    "appInfo": {},
+    "descHeight": "42px",
+    "imagePadding": true,
+    "cardPadding": "0px 12px",
+    "ifSendActionLog": true,
+    "isShowCard2": false,
+    "page": ""
+  },
+  "data": {
+    "exchange_icon": "https://sf3-ttcdn-tos.pstatp.com/obj/unity/images/feed-mix-card/exchange.png",
+    "delayTime": "300ms",
+    "exchangeTimer": null,
+    "exchangeShowStyle": {
+      "transform": "rotate(-90deg)",
+      "animationName": "ExchangeShowAnimate",
+      "animationDelay": "210ms"
+    },
+    "exchangeHideStyle": {
+      "transform": "rotate(0deg)",
+      "animationName": "ExchangeHideAnimate",
+      "animationDelay": "0ms"
+    },
+    "exchangeInitStyle": {
+      "transform": "rotate(-90deg)"
+    },
+    "exchangeAnimateStyle": {
+      "transform": "rotate(-90deg)"
+    },
+    "buttonShowStyle": {
+      "opacity": "0",
+      "transform": "translateY(-22px)",
+      "animationName": "ButtonShowAnimate",
+      "animationDelay": "280ms",
+      "animationDuration": "500ms",
+      "animationFillMode": "forwards",
+      "animationTimingFunction": "cubic-bezier(.4, 0, .2, 1)"
+    },
+    "buttonHideStyle": {
+      "opacity": 1,
+      "transform": "translateY(0px)",
+      "animationName": "ButtonHideAnimate",
+      "animationDelay": "0ms",
+      "animationDuration": "500ms",
+      "animationFillMode": "forwards",
+      "animationTimingFunction": "cubic-bezier(.4, 0, .2, 1)"
+    },
+    "buttonInitStyle": {
+      "opacity": "0"
+    },
+    "buttonAnimateStyle": {
+      "opacity": "0"
+    },
+    "cardShowStyle": {
+      "opacity": "0",
+      "transform": "translateY(-22px)",
+      "animationName": "CardShowAnimate",
+      "animationDelay": "210ms"
+    },
+    "cardHideStyle": {
+      "opacity": 1,
+      "transform": "translateY(0)",
+      "animationName": "CardHideAnimate",
+      "animationDelay": "70ms"
+    },
+    "cardInitStyle": {
+      "opacity": "0"
+    },
+    "cardAnimateStyle": {
+      "opacity": "0"
+    },
+    "componentShowTime": ""
+  },
+  "lifetimes": {
+    "load": {
+      "__TYPE__": 4,
+      "code": "function(){\n        this.methods.callJSB(\"cardStatus\", {data: {status: 1}}, function(res){console.info('cardStatus', res)});\n         var { device_platform } = this.props.appInfo;\n        console.info(\"device_platform\", device_platform)\n        if(device_platform !== 'android') {\n          this.methods.setData({\n            delayTime: \"210ms\"\n          });\n        }\n      }"
+    }
+  },
+  "event": {
+    "feedButtonStartUnfold": {
+      "__TYPE__": 4,
+      "code": "\n         function() {\n            console.info(\"feedButtonStartUnfold事件回调\");\n            this.methods.setData({\n              exchangeAnimateStyle: this.data.exchangeShowStyle,\n              buttonAnimateStyle: this.data.buttonShowStyle,\n              cardAnimateStyle: this.data.cardShowStyle,\n              componentShowTime: this.data.componentShowTime ? this.data.componentShowTime : new Date().getTime()\n            }, function () {})\n         }\n      "
+    }
+  },
+  "methods": {
+    "onClick": {
+      "__TYPE__": 4,
+      "code": "\n        function(refer, click_type) {\n          if(!click_type) {\n            click_type = ''\n          }\n          var _this = this;\n          \n           this.methods.callJSB(\"getVideoShowTime\", {}, function (res) {\n            var show_time = res.data.show_time;\n          \n            var click_time = (\n              new Date().getTime() -  _this.data.componentShowTime\n            ).toString();\n          \n            console.info(\"show_time, click_time, refer\", show_time, click_time, refer);\n          \n             _this.methods.callJSB(\n              \"feedLearnMoreButtonClick\",\n              {\n                data: {\n                  refer: refer,\n                  click_type: click_type,\n                  type:\n                     _this.data.__globalProps.lynx_raw_data.template_type === 5\n                      ? \"app\"\n                      : \"business\",\n                  template_type:  _this.data.__globalProps.lynx_raw_data.template_type,\n                  ad_extra_data: {\n                    show_time: show_time,\n                    click_time: click_time\n                  }\n                }\n              },\n              function () {}\n            );\n          });\n        }\n      "
+    },
+    "inSightSdkClick": {
+      "__TYPE__": 4,
+      "code": "\n        function(event) {\n            if(this.methods.eventEmitter && this.methods.eventEmitter.emitClickEvent) {\n               var { x, y } = event.detail || {};\n              console.info('x, y', x, y);\n              this.methods.eventEmitter.emitClickEvent({\n                x: x,\n                y: y,\n                clientX: x,\n                clientY: y,\n              })\n            }\n        }\n      "
+    },
+    "startHideAnimate": {
+      "__TYPE__": 4,
+      "code": "\n        function() {\n          console.info('隐藏页面->执行隐藏动画');\n          this.methods.setData({\n            exchangeAnimateStyle: this.data.exchangeHideStyle,\n            buttonAnimateStyle: this.data.buttonHideStyle,\n            cardAnimateStyle: this.data.cardHideStyle\n          });\n        }\n      "
+    }
+  },
+  "slots": {
+    "thumb": [
+      {
+        "id": "",
+        "name": "view",
+        "style": {
+          "width": "100%",
+          "height": "100%",
+          "borderRadius": "8px",
+          "backgroundColor": "#DDDDDD"
+        }
+      }
+    ],
+    "title": [
+      {
+        "id": "",
+        "name": "view",
+        "style": {
+          "width": "100%",
+          "height": "22px",
+          "borderRadius": "4px",
+          "backgroundColor": "#DDDDDD"
+        }
+      }
+    ],
+    "button": [
+      {
+        "id": "",
+        "name": "view",
+        "style": {
+          "width": "100%",
+          "height": "100%",
+          "borderRadius": "4px",
+          "backgroundColor": "#DDDDDD"
+        }
+      }
+    ],
+    "highlight": [
+      {
+        "id": "",
+        "name": "view",
+        "style": {
+          "width": "100%",
+          "height": "100%",
+          "borderRadius": "4px",
+          "backgroundColor": "#DDDDDD"
+        }
+      }
+    ],
+    "slogan": [
+      {
+        "id": "",
+        "name": "view",
+        "style": {
+          "width": "100%",
+          "height": "18px",
+          "borderRadius": "4px",
+          "backgroundColor": "#DDDDDD"
+        }
+      }
+    ],
+    "sub_slogan": [
+      {
+        "id": "",
+        "name": "view",
+        "style": {
+          "width": "100%",
+          "height": "16px",
+          "borderRadius": "4px",
+          "backgroundColor": "#DDDDDD"
+        }
+      }
+    ],
+    "desc": [
+      {
+        "id": "",
+        "name": "view",
+        "style": {
+          "width": "100%",
+          "height": "100%",
+          "borderRadius": "4px",
+          "backgroundColor": "#DDDDDD"
+        }
+      }
+    ]
+  },
+  "content": {
+    "id": "",
+    "name": "view",
+    "style": {
+      "position": "relative",
+      "display": "flex",
+      "flexDirection": "column",
+      "justifyContent": "space-between",
+      "width": "100vw",
+      "maxWidth": "268px",
+      "height": "144px",
+      "margin": "35px 0px 0px 0px",
+      "overflow": "visible"
+    },
+    "event": {
+      "click": {
+        "__TYPE__": 4,
+        "code": "function(e) {this.methods.onClick.call(this, 'blank'); this.methods.inSightSdkClick.call(this, e);\n        this.methods.bridges.sendCustomLog({\n          label: \"blank\",\n          extra: {\n            page: this.props.page,\n          },\n        });\n        }"
+      }
+    },
+    "props": {
+      "name": "nativeNotResponseRootView"
+    },
+    "children": [
+      {
+        "id": "",
+        "name": "view",
+        "style": {
+          "__TYPE__": 4,
+          "code": "Object.assign({display: 'flex', flexDirection: 'row', width: '100%', height: '64px'}, this.data.buttonAnimateStyle)"
+        },
+        "children": [
+          {
+            "id": "",
+            "name": "slot",
+            "style": {
+              "flexShrink": 0,
+              "width": "64px",
+              "height": "64px",
+              "overflow": "hidden"
+            },
+            "event": {
+              "click": {
+                "__TYPE__": 4,
+                "code": "function(e) {this.methods.onClick.call(this, 'photo'); this.methods.inSightSdkClick.call(this, e);\n                this.methods.bridges.sendCustomLog({\n                  label: \"photo\",\n                  extra: {\n                    page: this.props.page,\n                  },\n                });\n                }"
+              }
+            },
+            "props": {
+              "slotName": "thumb"
+            }
+          },
+          {
+            "id": "",
+            "name": "view",
+            "style": {
+              "display": "flex",
+              "flexDirection": "column",
+              "justifyContent": "space-between",
+              "flexGrow": 1,
+              "width": "0px",
+              "height": "64px",
+              "margin": "0px 0px 0px 8px",
+              "padding": "2px 0px 0px 0px"
+            },
+            "children": [
+              {
+                "id": "",
+                "name": "view",
+                "style": {
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "alignItems": "center",
+                  "width": "100%",
+                  "height": "22px",
+                  "overflowY": "visible"
+                },
+                "children": [
+                  {
+                    "id": "",
+                    "name": "slot",
+                    "style": {
+                      "flexGrow": 1,
+                      "width": "0px",
+                      "height": "22px",
+                      "overflowY": "visible"
+                    },
+                    "event": {
+                      "click": {
+                        "__TYPE__": 4,
+                        "code": "function(e) {this.methods.onClick.call(this, 'title'); this.methods.inSightSdkClick.call(this, e);\n                        this.methods.bridges.sendCustomLog({\n                          label: \"title\",\n                          extra: {\n                            page: this.props.page,\n                          },\n                        });\n                        }"
+                      }
+                    },
+                    "props": {
+                      "slotName": "title"
+                    }
+                  },
+                  {
+                    "id": "view-container",
+                    "name": "view",
+                    "style": {
+                      "padding": "3px",
+                      "width": "24px",
+                      "height": "24px",
+                      "alignSelf": "center"
+                    },
+                    "event": {
+                      "click": {
+                        "__TYPE__": 4,
+                        "code": "\n                          function click(e) {\n                            if (!this.data.exchangeTimer) {\n                              var _this = this;\n                               var timer = this.methods.setTimeout(function () {\n                                _this.methods.callJSB(\n                                  \"startFoldButton\",\n                                  {\n                                    data: {\n                                      animate_delay: 460\n                                    }\n                                  },\n                                  function () {\n                                    _this.methods.setData({\n                                      exchangeTimer: null\n                                    });\n                                  }\n                                );\n                              }, 120);\n                              \n                              console.info('隐藏页面->执行隐藏动画');\n                              this.methods.startHideAnimate.call(this);\n                              this.methods.bridges.sendAdLog({\n                                  data: {\n                                    tag: 'draw_ad',\n                                    label: 'otherclick',\n                                    extParam: {\n                                      refer: 'change',\n                                    },\n                                  }\n                                })\n                                \n                                this.methods.bridges.sendCustomLog({\n                                  label: \"change\",\n                                  extra: {\n                                    page: this.props.page,\n                                  },\n                                });\n                              \n                              this.methods.setTimeout(function () {\n                                _this.methods.setData({\n                                  exchangeTimer: timer\n                                });\n                              }, 0);\n\n                              \n                              this.methods.inSightSdkClick.call(this, e);\n                            }\n                          }\n                        "
+                      }
+                    },
+                    "children": [
+                      {
+                        "id": "image_1",
+                        "name": "image",
+                        "style": {
+                          "__TYPE__": 4,
+                          "code": "Object.assign({width: '100%', height: '100%', animationFillMode: 'forwards', animationDuration: '380ms', animationTimingFunction: \"cubic-bezier(.4, 0, .2, 1)\",}, this.data.exchangeAnimateStyle)"
+                        },
+                        "props": {
+                          "src": {
+                            "__TYPE__": 1,
+                            "path": [
+                              "exchange_icon"
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "",
+                "name": "slot",
+                "$if": {
+                  "__TYPE__": 4,
+                  "code": "this.props.ifSendActionLog"
+                },
+                "style": {
+                  "width": "100%",
+                  "height": "32px"
+                },
+                "event": {
+                  "click": {
+                    "__TYPE__": 4,
+                    "code": "function(e) {this.methods.onClick.call(this, 'button', 'action'); this.methods.inSightSdkClick.call(this, e);\n                    this.methods.bridges.sendCustomLog({\n                      label: \"button\",\n                      extra: {\n                        page: this.props.page,\n                      },\n                    });\n                    }"
+                  }
+                },
+                "props": {
+                  "slotName": "button"
+                }
+              },
+              {
+                "id": "",
+                "name": "slot",
+                "$if": {
+                  "__TYPE__": 4,
+                  "code": "!this.props.ifSendActionLog"
+                },
+                "style": {
+                  "width": "100%",
+                  "height": "32px"
+                },
+                "props": {
+                  "slotName": "button"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "",
+        "name": "view",
+        "$if": {
+          "__TYPE__": 4,
+          "code": "!this.props.isShowCard2"
+        },
+        "style": {
+          "__TYPE__": 4,
+          "code": "Object.assign({display: 'flex', flexDirection: 'row', alignItems: 'center', width: '100%', height: '72px', padding: this.props.cardPadding, backgroundColor: 'rgba(0, 0, 0, 0.34)', borderRadius: '4px', animationDuration: '500ms', animationTimingFunction: 'cubic-bezier(.4, 0, .2, 1)', animationFillMode: \"forwards\"}, this.data.cardAnimateStyle)"
+        },
+        "event": {
+          "click": {
+            "__TYPE__": 4,
+            "code": "function(e) {this.methods.onClick.call(this, 'support_area'); this.methods.inSightSdkClick.call(this, e);\n            this.methods.bridges.sendCustomLog({\n                label: \"support_area\",\n                extra: {\n                  page: this.props.page,\n                },\n              });\n            }"
+          }
+        },
+        "children": [
+          {
+            "id": "",
+            "name": "slot",
+            "style": {
+              "width": "34px",
+              "height": "48px",
+              "padding": {
+                "__TYPE__": 4,
+                "code": "this.props.imagePadding ? '5px 0px 3px 0px' : '0px'"
+              }
+            },
+            "props": {
+              "slotName": "highlight"
+            }
+          },
+          {
+            "id": "",
+            "name": "view",
+            "style": {
+              "width": "1px",
+              "height": "56px",
+              "margin": "0px 8px 0px 8px",
+              "backgroundImage": {
+                "__TYPE__": 4,
+                "code": "this.props.devider_image"
+              }
+            }
+          },
+          {
+            "id": "",
+            "name": "view",
+            "style": {
+              "display": "flex",
+              "flexDirection": "column",
+              "justifyContent": "space-between",
+              "flexGrow": 1,
+              "width": "0px",
+              "height": {
+                "__TYPE__": 1,
+                "path": [
+                  "descHeight"
+                ]
+              },
+              "alignSelf": "center"
+            },
+            "children": [
+              {
+                "id": "",
+                "name": "slot",
+                "style": {
+                  "width": "100%",
+                  "height": "18px"
+                },
+                "props": {
+                  "slotName": "slogan"
+                }
+              },
+              {
+                "id": "",
+                "name": "slot",
+                "style": {
+                  "width": "100%",
+                  "height": "auto",
+                  "minHeight": "16px"
+                },
+                "props": {
+                  "slotName": "sub_slogan"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "",
+        "name": "view",
+        "$if": {
+          "__TYPE__": 4,
+          "code": "this.props.isShowCard2"
+        },
+        "style": {
+          "__TYPE__": 4,
+          "code": "Object.assign({display: 'flex', flexDirection: 'row', alignItems: 'center', width: '100%', height: '72px', padding: this.props.cardPadding, backgroundColor: 'rgba(0, 0, 0, 0.34)', borderRadius: '4px', animationDuration: '500ms', animationTimingFunction: 'cubic-bezier(.4, 0, .2, 1)', animationFillMode: \"forwards\"}, this.data.cardAnimateStyle)"
+        },
+        "event": {
+          "click": {
+            "__TYPE__": 4,
+            "code": "function(e) {this.methods.onClick.call(this, 'support_area'); this.methods.inSightSdkClick.call(this, e);\n            this.methods.bridges.sendCustomLog({\n                label: \"support_area\",\n                extra: {\n                  page: this.props.page,\n                },\n              });\n            }"
+          }
+        },
+        "children": [
+          {
+            "id": "",
+            "name": "slot",
+            "style": {
+              "flexGrow": 1,
+              "width": "100%",
+              "height": "100%",
+              "overflow": "visible",
+              "alignItems": "center"
+            },
+            "props": {
+              "slotName": "desc"
+            }
+          }
+        ]
+      }
+    ]
+  }
+},
